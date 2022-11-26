@@ -3,4 +3,6 @@ project(Projet_Systemes_Reseaux C)
 
 set(CMAKE_C_STANDARD 23)
 
-add_executable(Projet_Systemes_Reseaux main.c)
+add_executable(gestionJeu gestionJeu.c)
+
+add_executable(joueur joueur.c)
