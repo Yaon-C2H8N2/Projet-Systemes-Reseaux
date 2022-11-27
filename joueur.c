@@ -24,9 +24,24 @@ int main() {
     printf("Connecté au serveur !\n");
     printf("En attente du début de la partie ...\n");
 
-    memset(message, 0, sizeof(message));
-    recv(sd, message, sizeof(message), 0);
-    printf("[SERVER]%s\n", message);
+    unsigned short quit = 0;
+
+    do {
+        memset(message, 0, sizeof(message));
+        recv(sd, message, sizeof(message), 0);
+        printf("[SERVER]%s\n", message);
+        if(strcmp(message,"[quit]")==0){
+            printf("Received instructions to quit\n");
+            quit++;
+        }else if(strcmp(message, "[displayCards]")==0){
+            memset(message, 0, sizeof(message));
+            recv(sd, message, sizeof(message), 0);
+            printf("[SERVER]%s\n", message);
+            memset(message, 0, sizeof(message));
+            recv(sd, message, sizeof(message), 0);
+            printf("[SERVER]%s\n", message);
+        }
+    } while (!quit);
 
     close(sd);
     return 0;

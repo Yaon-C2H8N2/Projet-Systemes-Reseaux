@@ -10,8 +10,16 @@
 
 #define MAX_PLAYER_COUNT 4
 
-void gameLoop(int *client) {
-    printf("[boucleDeJeu]");
+void gameLoop(int *client, int nbJoueur) {
+    char message[256] = "[startingGame]";
+    for (int i = 0; i < nbJoueur; i++) {
+        memset(message, 0, sizeof(message));
+        strcat(message, "[displayCards]");
+        send(client[i], message, 256 * sizeof(char), 0);
+        memset(message, 0, sizeof(message));
+        strcat(message, "[1][2][3][4]");
+        send(client[i], message, 256 * sizeof(char), 0);
+    }
 }
 
 int init_serveur() {
@@ -84,10 +92,10 @@ int main() {
                 break;
             case '3':
                 for (int i = 0; i < nbJoueur; i++) {
-                    char message[] = "[startingGame]";
-                    send(client[i], message, strlen(message), 0);
+                    char message[256] = "[startingGame]";
+                    send(client[i], message, 256 * sizeof(char), 0);
                 }
-                gameLoop(client);
+                gameLoop(client, nbJoueur);
                 quit++;
                 break;
             case '4':
@@ -101,6 +109,8 @@ int main() {
     } while (!quit);
 
     for (int i = 0; i < nbJoueur; i++) {
+        char message[256] = "[quit]";
+        send(client[i], message, 256 * sizeof(char), 0);
         close(client[i]);
     }
     close(sd);
