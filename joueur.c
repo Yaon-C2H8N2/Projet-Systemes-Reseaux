@@ -37,9 +37,6 @@ int main() {
             memset(message, 0, sizeof(message));
             recv(sd, message, sizeof(message), 0);
             printf("[SERVER]%s\n", message);
-            memset(message, 0, sizeof(message));
-            recv(sd, message, sizeof(message), 0);
-            printf("[SERVER]%s\n", message);
         }
     } while (!quit);
 
