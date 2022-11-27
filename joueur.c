@@ -22,13 +22,11 @@ int main() {
         return -1;
     }
     printf("Connecté au serveur !\n");
+    printf("En attente du début de la partie ...\n");
 
-    do{
-        memset(message,0,strlen(message));
-        printf(">");
-        scanf("%s",message);
-        printf("Message envoyé !\n");
-    }while(strcmp(message,"quit")!=0);
+    memset(message, 0, sizeof(message));
+    recv(sd, message, sizeof(message), 0);
+    printf("[SERVER]%s\n", message);
 
     close(sd);
     return 0;

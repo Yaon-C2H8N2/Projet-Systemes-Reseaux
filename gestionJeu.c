@@ -6,8 +6,13 @@
 #include <string.h>
 #include <malloc.h>
 #include <errno.h>
+#include <stdlib.h>
 
 #define MAX_PLAYER_COUNT 4
+
+void gameLoop(int *client) {
+    printf("[boucleDeJeu]");
+}
 
 int init_serveur() {
     int sd;
@@ -18,10 +23,9 @@ int init_serveur() {
 
     //lancement du socket serveur
     sd = socket(AF_INET, SOCK_STREAM, 0);
-    if (bind(sd, &server_addr, sizeof(server_addr)) < 0) {
+    if (bind(sd, (struct sockaddr *) &server_addr, sizeof(server_addr)) < 0) {
         printf("Erreur lors du lancement du serveur\n");
-    } else {
-        printf("Seveur up\n");
+        exit(1);
     }
     return sd;
 }
@@ -33,16 +37,17 @@ void ajout_joueur(int sd, int *client, int nbJoueur) {
     int newClient;
 
     //ecoute de client
-    listen(sd, 0);
-    printf("Listenning for client ...\n");
+    listen(sd, MAX_PLAYER_COUNT);
     socklen_t client_size = sizeof(client_addr);
+    printf("En attente de connexion du joueur ...\n");
     newClient = accept(sd, (struct sockaddr *) &client_addr, &client_size);
 
     if (newClient < 0) {
         printf("Une erreur est survenue lors de la connexion avec le client (%d)\n", newClient);
         printf("%s\n", strerror(errno));
+        exit(1);
     } else {
-        printf("Connecté !\n");
+        printf("Joueur %d connecté !\n", nbJoueur);
         client[nbJoueur - 1] = newClient;
     }
 }
@@ -77,6 +82,14 @@ int main() {
                     printf("Nombre maximum de joueurs connectés, vous ne pouvez pas ajouter de joueur supplémentaire\n");
                 }
                 break;
+            case '3':
+                for (int i = 0; i < nbJoueur; i++) {
+                    char message[] = "[startingGame]";
+                    send(client[i], message, strlen(message), 0);
+                }
+                gameLoop(client);
+                quit++;
+                break;
             case '4':
                 quit++;
                 break;
@@ -91,6 +104,5 @@ int main() {
         close(client[i]);
     }
     close(sd);
-
     return 0;
 }
