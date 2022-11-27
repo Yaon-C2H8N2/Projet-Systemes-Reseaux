@@ -4,13 +4,14 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <string.h>
+#include <malloc.h>
+#include <errno.h>
 
+#define MAX_PLAYER_COUNT 4
 
-int main() {
-    int sd, client;
-    struct sockaddr_in server_addr, client_addr;
-    char message[256];
-
+int init_serveur() {
+    int sd;
+    struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = 1085;
     server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
@@ -19,29 +20,76 @@ int main() {
     sd = socket(AF_INET, SOCK_STREAM, 0);
     if (bind(sd, &server_addr, sizeof(server_addr)) < 0) {
         printf("Erreur lors du lancement du serveur\n");
-        return -1;
+    } else {
+        printf("Seveur up\n");
     }
-    printf("Seveur up\n");
+    return sd;
+}
+
+
+void ajout_joueur(int sd, int *client, int nbJoueur) {
+    struct sockaddr_in client_addr;
+
+    int newClient;
 
     //ecoute de client
     listen(sd, 0);
     printf("Listenning for client ...\n");
-    int client_size = sizeof(client_addr);
-    client = accept(sd, (struct sockaddr *) &client_addr, &client_size);
+    socklen_t client_size = sizeof(client_addr);
+    newClient = accept(sd, (struct sockaddr *) &client_addr, &client_size);
 
-    if (client < 0) {
-        printf("Une erreur est survenue lors de la connexion avec le client\n");
-        return -1;
+    if (newClient < 0) {
+        printf("Une erreur est survenue lors de la connexion avec le client (%d)\n", newClient);
+        printf("%s\n", strerror(errno));
+    } else {
+        printf("Connecté !\n");
+        client[nbJoueur - 1] = newClient;
     }
-    printf("Connecté !\n");
+}
 
-    do{
-        memset(message,0,strlen(message));
-        recv(client, message, sizeof(message), 0);
-        printf("Message reçu : %s\n", message);
-    }while(strcmp(message,"quit")!=0);
+int main() {
+    int sd;
+    int nbJoueur = 0;
+    int *client = (int *) (malloc(sizeof(int)));
 
-    close(client);
+    sd = init_serveur();
+
+    printf("Bienvenue sur le jeu du 6 qui prend.\n");
+    printf("1. Ajouter un joueur\n");
+    printf("2. Ajouter un robot\n");
+    printf("3. Lancer la partie\n");
+    printf("4. Quitter le programme\n");
+
+    char user_input = ' ';
+    unsigned short quit = 0;
+
+    do {
+        printf("nbJoueur : %d\n", nbJoueur);
+        printf("> ");
+        scanf("%c", &user_input);
+        switch (user_input) {
+            case '1':
+                if (nbJoueur < MAX_PLAYER_COUNT) {
+                    nbJoueur++;
+                    client = (int *) (realloc(client, nbJoueur * sizeof(int)));
+                    ajout_joueur(sd, client, nbJoueur);
+                } else {
+                    printf("Nombre maximum de joueurs connectés, vous ne pouvez pas ajouter de joueur supplémentaire\n");
+                }
+                break;
+            case '4':
+                quit++;
+                break;
+            default:
+                printf("%c", user_input);
+                printf("Commande non reconnue\n");
+                break;
+        }
+    } while (!quit);
+
+    for (int i = 0; i < nbJoueur; i++) {
+        close(client[i]);
+    }
     close(sd);
 
     return 0;

@@ -27,10 +27,6 @@ int main() {
         memset(message,0,strlen(message));
         printf(">");
         scanf("%s",message);
-
-        if(send(sd,message,strlen(message),0)<0){
-            printf("Erreur lors de l'envoi du message\n");
-        }
         printf("Message envoyé !\n");
     }while(strcmp(message,"quit")!=0);
 
