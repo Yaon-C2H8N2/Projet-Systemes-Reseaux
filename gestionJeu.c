@@ -10,18 +10,6 @@
 
 #define MAX_PLAYER_COUNT 4
 
-void gameLoop(int *client, int nbJoueur) {
-    char message[256] = "[startingGame]";
-    for (int i = 0; i < nbJoueur; i++) {
-        memset(message, 0, sizeof(message));
-        strcat(message, "[displayCards]");
-        send(client[i], message, 256 * sizeof(char), 0);
-        memset(message, 0, sizeof(message));
-        strcat(message, "[1][2][3][4]");
-        send(client[i], message, 256 * sizeof(char), 0);
-    }
-}
-
 int init_serveur() {
     int sd;
     struct sockaddr_in server_addr;
@@ -60,6 +48,43 @@ void ajout_joueur(int sd, int *client, int nbJoueur) {
     }
 }
 
+void boucleJeu(int *client, int nbJoueur) {
+    for (int i = 0; i < nbJoueur; i++) {
+        int valid = 0;
+        char message[256];
+        do {
+            memset(message, 0, sizeof(message));
+            strcat(message, "[show]");
+            send(client[i], message, 256 * sizeof(char), 0);
+            memset(message, 0, sizeof(message));
+            strcat(message, "Test affichage");
+            send(client[i], message, 256 * sizeof(char), 0);
+            memset(message, 0, sizeof(message));
+            strcat(message, "[prompt]");
+            send(client[i], message, 256 * sizeof(char), 0);
+            memset(message, 0, sizeof(message));
+            recv(client[i], message, sizeof(message), 0);
+            printf("Réponse client : %s\n", message);
+            if (strcmp(message,"123456")==0) {
+                valid++;
+                memset(message, 0, sizeof(message));
+                strcat(message, "[show]");
+                send(client[i], message, 256 * sizeof(char), 0);
+                memset(message, 0, sizeof(message));
+                strcat(message, "Réponse valide");
+                send(client[i], message, 256 * sizeof(char), 0);
+            }else{
+                memset(message, 0, sizeof(message));
+                strcat(message, "[show]");
+                send(client[i], message, 256 * sizeof(char), 0);
+                memset(message, 0, sizeof(message));
+                strcat(message, "Réponse invalide");
+                send(client[i], message, 256 * sizeof(char), 0);
+            }
+        } while (valid == 0);
+    }
+}
+
 int main() {
     int sd;
     int nbJoueur = 0;
@@ -67,42 +92,34 @@ int main() {
 
     sd = init_serveur();
 
-    printf("Bienvenue sur le jeu du 6 qui prend.\n");
-    printf("1. Ajouter un joueur\n");
-    printf("2. Ajouter un robot\n");
-    printf("3. Lancer la partie\n");
-    printf("4. Quitter le programme\n");
-
     char user_input = ' ';
     unsigned short quit = 0;
 
     do {
-        printf("nbJoueur : %d\n", nbJoueur);
-        printf("> ");
-        scanf("%c", &user_input);
+        printf("Voulez-vous ajouter un joueur ? [o/n] (q pour quitter)\n");
+        scanf(" %c", &user_input);
         switch (user_input) {
-            case '1':
-                if (nbJoueur < MAX_PLAYER_COUNT) {
+            case 'o':
+                printf("Humain ou robot ? [h/r]\n");
+                scanf(" %c", &user_input);
+                if (strcmp(&user_input, "h") == 0) {
                     nbJoueur++;
                     client = (int *) (realloc(client, nbJoueur * sizeof(int)));
                     ajout_joueur(sd, client, nbJoueur);
-                } else {
-                    printf("Nombre maximum de joueurs connectés, vous ne pouvez pas ajouter de joueur supplémentaire\n");
-                }
+                } else if (strcmp(&user_input, "r") == 0) {
+                    printf("Robot pas encore implémenté\n");
+                } else printf("Commande non reconnue\n");
                 break;
-            case '3':
-                for (int i = 0; i < nbJoueur; i++) {
-                    char message[256] = "[startingGame]";
-                    send(client[i], message, 256 * sizeof(char), 0);
-                }
-                gameLoop(client, nbJoueur);
-                quit++;
+            case 'n':
+                if (nbJoueur >= 2) {
+                    boucleJeu(client, nbJoueur);
+                    quit++;
+                } else printf("Pas assez de joueur présents pour lancer la partie\n");
                 break;
-            case '4':
+            case 'q':
                 quit++;
                 break;
             default:
-                printf("%c", user_input);
                 printf("Commande non reconnue\n");
                 break;
         }
@@ -114,5 +131,6 @@ int main() {
         close(client[i]);
     }
     close(sd);
+    free(client);
     return 0;
 }

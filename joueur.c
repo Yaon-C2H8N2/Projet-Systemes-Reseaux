@@ -25,18 +25,25 @@ int main() {
     printf("En attente du début de la partie ...\n");
 
     unsigned short quit = 0;
+    char user_input = ' ';
 
     do {
         memset(message, 0, sizeof(message));
         recv(sd, message, sizeof(message), 0);
-        printf("[SERVER]%s\n", message);
-        if(strcmp(message,"[quit]")==0){
+        printf("[DEBUG][SERVER]%s\n", message);
+        if (strcmp(message, "[quit]") == 0) {
             printf("Received instructions to quit\n");
             quit++;
-        }else if(strcmp(message, "[displayCards]")==0){
+        } else if (strcmp(message, "[show]") == 0) {
             memset(message, 0, sizeof(message));
             recv(sd, message, sizeof(message), 0);
-            printf("[SERVER]%s\n", message);
+            printf("[DISPLAY][SERVER]%s\n", message);
+        } else if (strcmp(message, "[prompt]") == 0) {
+            memset(message, 0, sizeof(message));
+            scanf(" %s", &message);
+            send(sd, message, 256 * sizeof(char), 0);
+            memset(message, 0, sizeof(message));
+            recv(sd, message, sizeof(message), 0);
         }
     } while (!quit);
 
