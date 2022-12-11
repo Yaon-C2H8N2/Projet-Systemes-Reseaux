@@ -30,7 +30,6 @@ int main() {
     do {
         memset(message, 0, sizeof(message));
         recv(sd, message, sizeof(message), 0);
-        printf("[DEBUG][SERVER]%s\n", message);
         if (strcmp(message, "[quit]") == 0) {
             printf("Received instructions to quit\n");
             quit++;

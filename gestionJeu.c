@@ -108,6 +108,7 @@ int main() {
                     ajout_joueur(sd, client, nbJoueur);
                 } else if (strcmp(&user_input, "r") == 0) {
                     printf("Robot pas encore implémenté\n");
+                    //TODO Fork puis exec d'un joueur robot qui répondra automatiquement aux requêtes du serveur.
                 } else printf("Commande non reconnue\n");
                 break;
             case 'n':
