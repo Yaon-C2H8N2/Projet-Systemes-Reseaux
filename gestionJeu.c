@@ -106,10 +106,15 @@ void boucleJeu(int *client, int nbJoueur) {
                 showToClient(client[j], "===============================");
                 showToClient(client[j], message);
                 showToClient(client[j], "===============================");
+                showToClient(client[j], "PLATEAU DE JEU : ");
+                showToClient(client[j], "[Première ligne de carte si le jeu avait été implémenté]");
+                showToClient(client[j], "[Deuxième ligne de carte si le jeu avait été implémenté]");
+                showToClient(client[j], "[Troisième ligne de carte si le jeu avait été implémenté]");
+                showToClient(client[j], "[Quatrième ligne de carte si le jeu avait été implémenté]");
             }
             do {
                 showToClient(client[i],
-                             "Test affichage (123456 pour valider votre tour, fin pour mettre fin au programme)");
+                             "Test prompt (123456 pour valider votre tour, fin pour mettre fin au programme) : ");
                 promptFromClient(client[i], message);
                 printf("[DEBUG][CLIENT %d]Réponse client : %s\n", i, message);
                 if (strcmp(message, "123456") == 0) {
