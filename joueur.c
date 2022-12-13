@@ -36,13 +36,11 @@ int main() {
         } else if (strcmp(message, "[show]") == 0) {
             memset(message, 0, sizeof(message));
             recv(sd, message, sizeof(message), 0);
-            printf("[DISPLAY][SERVER]%s\n", message);
+            printf("%s\n", message);
         } else if (strcmp(message, "[prompt]") == 0) {
             memset(message, 0, sizeof(message));
             scanf(" %s", &message);
             send(sd, message, 256 * sizeof(char), 0);
-            memset(message, 0, sizeof(message));
-            recv(sd, message, sizeof(message), 0);
         }
     } while (!quit);
 
