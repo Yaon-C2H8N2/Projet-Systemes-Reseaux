@@ -22,13 +22,27 @@ int main() {
         return -1;
     }
     printf("Connecté au serveur !\n");
+    printf("En attente du début de la partie ...\n");
 
-    do{
-        memset(message,0,strlen(message));
-        printf(">");
-        scanf("%s",message);
-        printf("Message envoyé !\n");
-    }while(strcmp(message,"quit")!=0);
+    unsigned short quit = 0;
+    char user_input = ' ';
+
+    do {
+        memset(message, 0, sizeof(message));
+        recv(sd, message, sizeof(message), 0);
+        if (strcmp(message, "[quit]") == 0) {
+            printf("Received instructions to quit\n");
+            quit++;
+        } else if (strcmp(message, "[show]") == 0) {
+            memset(message, 0, sizeof(message));
+            recv(sd, message, sizeof(message), 0);
+            printf("%s\n", message);
+        } else if (strcmp(message, "[prompt]") == 0) {
+            memset(message, 0, sizeof(message));
+            scanf(" %s", &message);
+            send(sd, message, 256 * sizeof(char), 0);
+        }
+    } while (!quit);
 
     close(sd);
     return 0;
