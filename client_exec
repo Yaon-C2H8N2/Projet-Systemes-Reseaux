@@ -1,0 +1,3 @@
+#!/bin/bash
+gcc -o bin/6QuiPrend-client src/joueur.c
+./bin/6QuiPrend-client

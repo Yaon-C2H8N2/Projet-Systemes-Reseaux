@@ -242,8 +242,16 @@ int main() {
                         SIG_CLIENT = client;
                         ajout_joueur(sd, client, nbJoueur);
                     } else if (strcmp(&user_input, "r") == 0) {
-                        printf("Robot pas encore implémenté\n");
-                        //TODO Fork puis exec d'un joueur robot qui répondra automatiquement aux requêtes du serveur.
+                        nbJoueur++;
+                        SIG_NBJ = nbJoueur;
+                        client = (int *) (realloc(client, nbJoueur * sizeof(int)));
+                        SIG_CLIENT = client;
+                        if (fork() == 0) {
+                            execl("./bin/robot", "");
+                            exit(0);
+                        } else {
+                            ajout_joueur(sd, client, nbJoueur);
+                        }
                     } else printf("Commande non reconnue\n");
                     break;
                 case 'n':
