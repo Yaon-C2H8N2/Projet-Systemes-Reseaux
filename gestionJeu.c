@@ -207,7 +207,7 @@ void boucleJeu(int *client, int nbJoueur) {
             for (int j = 0; j < 10; j++) {
                 if (joueurs[i].cartes[j].numero > 0) {
                     char buffer[25];
-                    snprintf(buffer, 25, "%d.[%d - %d]", j, joueurs[i].cartes[j].numero, joueurs[i].cartes[j].nbTete);
+                    snprintf(buffer, 25, "%d.[%d - %d]", j+1, joueurs[i].cartes[j].numero, joueurs[i].cartes[j].nbTete);
                     strcat(message, buffer);
                 }
             }
@@ -219,7 +219,8 @@ void boucleJeu(int *client, int nbJoueur) {
                 showToClient(client[i], "Quelle carte souhaitez vous jouer ?");
                 promptFromClient(client[i], message);
                 printf("[DEBUG][CLIENT %d]Réponse client : %s\n", i, message);
-                if (strcmp(message, "123456") == 0) {
+                int carteJouee = atoi(message);
+                if (carteJouee < 11 && carteJouee >=1 && joueurs[i].cartes[carteJouee-1].numero != 0) {
                     valid++;
                     showToClient(client[i], "Réponse valide");
                 } else if (strcmp(message, "quit") == 0) {
