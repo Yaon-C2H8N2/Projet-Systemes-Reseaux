@@ -92,80 +92,24 @@ void promptFromClient(int client, char *content) {
 
 void boucleJeu(int *client, int nbJoueur) {
     int fin = 0;
-    struct joueur joueurs[nbJoueur];
-    struct carte pioche[104];
-    struct carte plateau[4][10];
+    struct joueur *joueurs = (struct joueur *) (calloc(nbJoueur, sizeof(struct joueur)));
+    struct carte *pioche = (struct carte *) (calloc(104, sizeof(struct carte)));
+    struct carte **plateau = (struct carte **) (malloc(4 * sizeof(struct carte *)));
 
-    // init de la pioche
-    for (int i = 0; i < 104; i++) {
-        pioche[i].numero = i + 1;
-        pioche[i].nbTete = (rand() % 7) + 1;
-    }
-
-    //init du plateau
     for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 6; j++) {
-            plateau[i][j].numero = 0;
-            plateau[i][j].nbTete = 0;
-        }
-        int index = 0;
-        do {
-            index = rand() % 104;
-            plateau[i][0].numero = pioche[index].numero;
-            plateau[i][0].nbTete = pioche[index].nbTete;
-        } while (pioche[index].numero == 0);
-        pioche[index].numero = 0;
-        pioche[index].nbTete = 0;
+        plateau[i] = (struct carte *) (calloc(6, sizeof(struct carte)));
     }
 
-    //DEBUG affichage du plateau
-    for (int i = 0; i < 4; i++) {
-        char message[256];
-        memset(message, 0, sizeof(message));
-        for (int j = 0; j < 6; j++) {
-            if (plateau[i][j].numero > 0) {
-                char buffer[25];
-                snprintf(buffer, 25, "[%d - %d]", plateau[i][j].numero, plateau[i][j].nbTete);
-                strcat(message, buffer);
-            }
-        }
-        printf("[%d]%s\n", i + 1, message);
-    }
+    printf("Initialisation des cartes ...\n");
+    initPioche(pioche);
+    printf("Initialisation du plateau ...\n");
+    initPlateau(pioche, plateau);
+    printf("Initialisation des joueurs ...\n");
+    initJoueurs(pioche, joueurs, nbJoueur);
 
-    //init des joueurs
-    for (int i = 0; i < nbJoueur; i++) {
-        joueurs[i].score = 0;
-        for (int j = 0; j < 10; j++) {
-            joueurs[i].cartes[j].numero = 0;
-            joueurs[i].cartes[j].nbTete = 0;
-        }
-        int index = 0;
-        for (int j = 0; j < 10; j++) {
-            do {
-                index = rand() % 104;
-                joueurs[i].cartes[j].numero = pioche[index].numero;
-                joueurs[i].cartes[j].nbTete = pioche[index].nbTete;
-            } while (pioche[index].numero == 0);
-            pioche[index].numero = 0;
-            pioche[index].nbTete = 0;
-        }
-    }
-
-    //DEBUG affichage des jeux des joueurs
-    for (int i = 0; i < nbJoueur; i++) {
-        char message[256];
-        memset(message, 0, sizeof(message));
-        for (int j = 0; j < 10; j++) {
-            if (joueurs[i].cartes[j].numero > 0) {
-                char buffer[25];
-                snprintf(buffer, 25, "%d.[%d - %d]", j + 1, joueurs[i].cartes[j].numero, joueurs[i].cartes[j].nbTete);
-                strcat(message, buffer);
-            }
-        }
-        printf("Jeu du joueur %d :\n%s\n", i, message);
-    }
-
+    printf("Début de la partie !\n");
     //début de la boucle de jeu
+    int nbTours = 0;
     do {
         int i = 0;
         while (i < nbJoueur && fin == 0) {
@@ -219,7 +163,6 @@ void boucleJeu(int *client, int nbJoueur) {
             do {
                 showToClient(client[i], "Quelle carte souhaitez vous jouer ?");
                 promptFromClient(client[i], message);
-                printf("[DEBUG][CLIENT %d]Réponse client : %s\n", i, message);
                 int carteJouee = atoi(message);
                 if (carteJouee < 11 && carteJouee >= 1 && joueurs[i].cartes[carteJouee - 1].numero != 0) {
                     do {
@@ -227,16 +170,28 @@ void boucleJeu(int *client, int nbJoueur) {
                         promptFromClient(client[i], message);
                         int ligneCarteJouee = atoi(message);
                         if (ligneCarteJouee < 5 && ligneCarteJouee >= 1) {
-                            joueCarte(joueurs[i].cartes[carteJouee - 1], &plateau, ligneCarteJouee-1);
+                            //envoi à tous les joueurs de la carte jouée et de la ligne sauf le joueur ayant joué
+                            for (int j = 0; j < nbJoueur; j++) {
+                                if (j != i) {
+                                    memset(message, 0, sizeof(message));
+                                    snprintf(message, 256, "Le joueur %d a joué la carte [%d - %d] dans la rangée %d",
+                                             i + 1, joueurs[i].cartes[carteJouee - 1].numero,
+                                             joueurs[i].cartes[carteJouee - 1].nbTete,
+                                             ligneCarteJouee);
+                                    showToClient(client[j], message);
+                                }
+                            }
+
+                            joueCarte(&joueurs[i], joueurs[i].cartes[carteJouee - 1], plateau, ligneCarteJouee - 1);
                             joueurs[i].cartes[carteJouee - 1].numero = 0;
                             joueurs[i].cartes[carteJouee - 1].nbTete = 0;
+
                             valid++;
                         }
                     } while (valid == 0);
                 } else if (strcmp(message, "quit") == 0) {
                     valid++;
                     fin++;
-                    showToClient(client[i], "Réponse valide");
                     showToClient(client[i], "Fin du programme");
                 } else {
                     showToClient(client[i], "Réponse invalide");
@@ -244,23 +199,15 @@ void boucleJeu(int *client, int nbJoueur) {
             } while (valid == 0);
             i++;
         }
-    } while (fin == 0);
-}
+        nbTours++;
+    } while (fin == 0 && nbTours < 10);
 
-void joueCarte(struct carte carte, struct carte **plateau, int ligne) {
-    printf("Carte jouée : [%d - %d]\nLigne carte jouée : %d", carte.numero, carte.nbTete, ligne);
-    int i = 0;
-    unsigned short trouvee = 0;
-    while (i < 5 && !trouvee) {
-        if(plateau[ligne][i].numero == 0){
-            plateau[ligne][i].numero = carte.numero;
-            plateau[ligne][i].nbTete = carte.nbTete;
-            trouvee++;
-        }
+    free(joueurs);
+    free(pioche);
+    for (int i = 0; i < 4; i++) {
+        free(plateau[i]);
     }
-    if(i>=5){
-        printf("Ligne complétée");
-    }
+    free(plateau);
 }
 
 int main() {

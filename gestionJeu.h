@@ -5,15 +5,7 @@
 #ifndef PROJET_SYSTEMES_RESEAUX_GESTIONJEU_H
 #define PROJET_SYSTEMES_RESEAUX_GESTIONJEU_H
 
-struct carte {
-    int numero;
-    int nbTete;
-};
-
-struct joueur {
-    struct carte cartes[10];
-    int score;
-};
+#include "sixQuiPrend.h"
 
 void sigint_trap(int);
 
@@ -26,7 +18,5 @@ void showToClient(int, char *);
 void promptFromClient(int, char *);
 
 void boucleJeu(int *, int);
-
-void joueCarte(struct carte, struct carte **, int);
 
 #endif //PROJET_SYSTEMES_RESEAUX_GESTIONJEU_H
