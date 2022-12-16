@@ -12,6 +12,7 @@ struct carte{
 
 struct joueur{
     struct carte cartes[10];
+    int score;
 };
 
 void sigint_trap(int);

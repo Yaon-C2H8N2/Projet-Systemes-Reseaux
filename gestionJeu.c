@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <time.h>
 #include "gestionJeu.h"
 
 #define MAX_PLAYER_COUNT 4
@@ -91,11 +92,87 @@ void promptFromClient(int client, char *content) {
 
 void boucleJeu(int *client, int nbJoueur) {
     int fin = 0;
+    struct joueur joueurs[nbJoueur];
+    struct carte pioche[104];
+    struct carte plateau[4][10];
+
+    // init de la pioche
+    for (int i = 0; i < 104; i++) {
+        pioche[i].numero = i + 1;
+        pioche[i].nbTete = (rand() % 7) + 1;
+    }
+
+    //init du plateau
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 6; j++) {
+            plateau[i][j].numero = 0;
+            plateau[i][j].nbTete = 0;
+        }
+        int index = 0;
+        do {
+            index = rand() % 104;
+            plateau[i][0].numero = pioche[index].numero;
+            plateau[i][0].nbTete = pioche[index].nbTete;
+        } while (pioche[index].numero == 0);
+        pioche[index].numero = 0;
+        pioche[index].nbTete = 0;
+    }
+
+    //DEBUG affichage du plateau
+    for (int i = 0; i < 4; i++) {
+        char message[256];
+        memset(message, 0, sizeof(message));
+        for (int j = 0; j < 6; j++) {
+            if (plateau[i][j].numero > 0) {
+                char buffer[25];
+                snprintf(buffer, 25, "[%d - %d]", plateau[i][j].numero, plateau[i][j].nbTete);
+                strcat(message, buffer);
+            }
+        }
+        printf("[%d]%s\n", i, message);
+    }
+
+    //init des joueurs
+    for (int i = 0; i < nbJoueur; i++) {
+        joueurs[i].score = 0;
+        for (int j = 0; j < 10; j++) {
+            joueurs[i].cartes[j].numero = 0;
+            joueurs[i].cartes[j].nbTete = 0;
+        }
+        int index = 0;
+        for (int j = 0; j < 10; j++) {
+            do {
+                index = rand() % 104;
+                joueurs[i].cartes[j].numero = pioche[index].numero;
+                joueurs[i].cartes[j].nbTete = pioche[index].nbTete;
+            } while (pioche[index].numero == 0);
+            pioche[index].numero = 0;
+            pioche[index].nbTete = 0;
+        }
+    }
+
+    //DEBUG affichage des jeux des joueurs
+    for (int i = 0; i < nbJoueur; i++) {
+        char message[256];
+        memset(message, 0, sizeof(message));
+        for (int j = 0; j < 10; j++) {
+            if (joueurs[i].cartes[j].numero > 0) {
+                char buffer[25];
+                snprintf(buffer, 25, "%d.[%d - %d]", j, joueurs[i].cartes[j].numero, joueurs[i].cartes[j].nbTete);
+                strcat(message, buffer);
+            }
+        }
+        printf("Jeu du joueur %d :\n%s\n", i, message);
+    }
+
+    //début de la boucle de jeu
     do {
         int i = 0;
         while (i < nbJoueur && fin == 0) {
             int valid = 0;
             char message[256];
+
+            //Affichage du plateau à tous les joueurs et indication du joueur dont c'est le tour
             for (int j = 0; j < nbJoueur; j++) {
                 memset(message, 0, sizeof(message));
                 if (i == j) {
@@ -107,14 +184,39 @@ void boucleJeu(int *client, int nbJoueur) {
                 showToClient(client[j], message);
                 showToClient(client[j], "===============================");
                 showToClient(client[j], "PLATEAU DE JEU : ");
-                showToClient(client[j], "[Première ligne de carte si le jeu avait été implémenté]");
-                showToClient(client[j], "[Deuxième ligne de carte si le jeu avait été implémenté]");
-                showToClient(client[j], "[Troisième ligne de carte si le jeu avait été implémenté]");
-                showToClient(client[j], "[Quatrième ligne de carte si le jeu avait été implémenté]");
+                for (int k = 0; k < 4; k++) {
+                    memset(message, 0, sizeof(message));
+                    snprintf(message, 256, "[%d]", k);
+                    for (int l = 0; l < 6; l++) {
+                        if (plateau[k][l].numero > 0) {
+                            char buffer[25];
+                            snprintf(buffer, 25, "[%d - %d]", plateau[k][l].numero, plateau[k][l].nbTete);
+                            strcat(message, buffer);
+                        }
+                    }
+                    showToClient(client[j], message);
+                }
             }
+            //affichage des points du joueur
+            memset(message, 0, sizeof(message));
+            snprintf(message, 256, "Vos points : %d", joueurs[i].score);
+            showToClient(client[i], message);
+
+            //affichage du jeu du joueur
+            memset(message, 0, sizeof(message));
+            for (int j = 0; j < 10; j++) {
+                if (joueurs[i].cartes[j].numero > 0) {
+                    char buffer[25];
+                    snprintf(buffer, 25, "%d.[%d - %d]", j, joueurs[i].cartes[j].numero, joueurs[i].cartes[j].nbTete);
+                    strcat(message, buffer);
+                }
+            }
+            showToClient(client[i], "Votre jeu :");
+            showToClient(client[i], message);
+
+            //Début du tour du joueur i
             do {
-                showToClient(client[i],
-                             "Test prompt (123456 pour valider votre tour, fin pour mettre fin au programme) : ");
+                showToClient(client[i], "Quelle carte souhaitez vous jouer ?");
                 promptFromClient(client[i], message);
                 printf("[DEBUG][CLIENT %d]Réponse client : %s\n", i, message);
                 if (strcmp(message, "123456") == 0) {
@@ -135,6 +237,7 @@ void boucleJeu(int *client, int nbJoueur) {
 }
 
 int main() {
+    srand(time(NULL));
     int sd;
     int nbJoueur = 0;
     SIG_NBJ = 0;
