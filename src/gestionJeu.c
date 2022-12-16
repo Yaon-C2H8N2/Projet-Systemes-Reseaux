@@ -202,6 +202,17 @@ void boucleJeu(int *client, int nbJoueur) {
         nbTours++;
     } while (fin == 0 && nbTours < 10);
 
+    for (int i = 0; i < nbJoueur; i++) {
+        char message[256];
+        memset(message, 0, sizeof(message));
+        for (int j = 0; j < nbJoueur; j++) {
+            char ligne[25];
+            memset(ligne, 0, sizeof(ligne));
+            snprintf(ligne, 25, "Score joueur %d : %d", j + 1, joueurs[j].score);
+        }
+        showToClient(client[i], message);
+    }
+
     free(joueurs);
     free(pioche);
     for (int i = 0; i < 4; i++) {
@@ -248,7 +259,7 @@ int main() {
                         SIG_CLIENT = client;
                         if (fork() == 0) {
                             execl("./bin/robot", "");
-                            exit(0);
+                            quit++;
                         } else {
                             ajout_joueur(sd, client, nbJoueur);
                         }
