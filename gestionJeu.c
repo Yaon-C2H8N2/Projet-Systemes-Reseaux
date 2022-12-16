@@ -129,7 +129,7 @@ void boucleJeu(int *client, int nbJoueur) {
                 strcat(message, buffer);
             }
         }
-        printf("[%d]%s\n", i, message);
+        printf("[%d]%s\n", i + 1, message);
     }
 
     //init des joueurs
@@ -158,7 +158,7 @@ void boucleJeu(int *client, int nbJoueur) {
         for (int j = 0; j < 10; j++) {
             if (joueurs[i].cartes[j].numero > 0) {
                 char buffer[25];
-                snprintf(buffer, 25, "%d.[%d - %d]", j, joueurs[i].cartes[j].numero, joueurs[i].cartes[j].nbTete);
+                snprintf(buffer, 25, "%d.[%d - %d]", j + 1, joueurs[i].cartes[j].numero, joueurs[i].cartes[j].nbTete);
                 strcat(message, buffer);
             }
         }
@@ -186,7 +186,7 @@ void boucleJeu(int *client, int nbJoueur) {
                 showToClient(client[j], "PLATEAU DE JEU : ");
                 for (int k = 0; k < 4; k++) {
                     memset(message, 0, sizeof(message));
-                    snprintf(message, 256, "[%d]", k);
+                    snprintf(message, 256, "[%d]", k + 1);
                     for (int l = 0; l < 6; l++) {
                         if (plateau[k][l].numero > 0) {
                             char buffer[25];
@@ -207,7 +207,8 @@ void boucleJeu(int *client, int nbJoueur) {
             for (int j = 0; j < 10; j++) {
                 if (joueurs[i].cartes[j].numero > 0) {
                     char buffer[25];
-                    snprintf(buffer, 25, "%d.[%d - %d]", j+1, joueurs[i].cartes[j].numero, joueurs[i].cartes[j].nbTete);
+                    snprintf(buffer, 25, "%d.[%d - %d]", j + 1, joueurs[i].cartes[j].numero,
+                             joueurs[i].cartes[j].nbTete);
                     strcat(message, buffer);
                 }
             }
@@ -220,9 +221,18 @@ void boucleJeu(int *client, int nbJoueur) {
                 promptFromClient(client[i], message);
                 printf("[DEBUG][CLIENT %d]Réponse client : %s\n", i, message);
                 int carteJouee = atoi(message);
-                if (carteJouee < 11 && carteJouee >=1 && joueurs[i].cartes[carteJouee-1].numero != 0) {
-                    valid++;
-                    showToClient(client[i], "Réponse valide");
+                if (carteJouee < 11 && carteJouee >= 1 && joueurs[i].cartes[carteJouee - 1].numero != 0) {
+                    do {
+                        showToClient(client[i], "Dans quelle rangée souhaitez vous la jouer ?");
+                        promptFromClient(client[i], message);
+                        int ligneCarteJouee = atoi(message);
+                        if (ligneCarteJouee < 5 && ligneCarteJouee >= 1) {
+                            joueCarte(joueurs[i].cartes[carteJouee - 1], &plateau, ligneCarteJouee-1);
+                            joueurs[i].cartes[carteJouee - 1].numero = 0;
+                            joueurs[i].cartes[carteJouee - 1].nbTete = 0;
+                            valid++;
+                        }
+                    } while (valid == 0);
                 } else if (strcmp(message, "quit") == 0) {
                     valid++;
                     fin++;
@@ -235,6 +245,22 @@ void boucleJeu(int *client, int nbJoueur) {
             i++;
         }
     } while (fin == 0);
+}
+
+void joueCarte(struct carte carte, struct carte **plateau, int ligne) {
+    printf("Carte jouée : [%d - %d]\nLigne carte jouée : %d", carte.numero, carte.nbTete, ligne);
+    int i = 0;
+    unsigned short trouvee = 0;
+    while (i < 5 && !trouvee) {
+        if(plateau[ligne][i].numero == 0){
+            plateau[ligne][i].numero = carte.numero;
+            plateau[ligne][i].nbTete = carte.nbTete;
+            trouvee++;
+        }
+    }
+    if(i>=5){
+        printf("Ligne complétée");
+    }
 }
 
 int main() {
