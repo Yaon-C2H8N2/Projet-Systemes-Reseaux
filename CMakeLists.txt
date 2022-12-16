@@ -3,6 +3,6 @@ project(Projet_Systemes_Reseaux C)
 
 set(CMAKE_C_STANDARD 23)
 
-add_executable(gestionJeu gestionJeu.c gestionJeu.h sixQuiPrend.h sixQuiPrend.c)
+add_executable(gestionJeu src/gestionJeu.c src/gestionJeu.h src/sixQuiPrend.h src/sixQuiPrend.c)
 
-add_executable(joueur joueur.c)
+add_executable(joueur src/joueur.c)
