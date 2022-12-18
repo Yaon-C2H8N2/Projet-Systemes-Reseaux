@@ -7,6 +7,17 @@
 #include <stdlib.h>
 #include <time.h>
 
+/**
+ * Fonction effectuant le placement d'une carte dans une rangée.
+ * @param joueur
+ * Le joueur jouant une carte.
+ * @param carte
+ * La carte jouée.
+ * @param plateau
+ * Le plateau de jeu.
+ * @param ligne
+ * La ligne sur laquelle est jouée la carte.
+ */
 void joueCarte(struct joueur *joueur,struct carte carte, struct carte **plateau, int ligne) {
     int i = 0;
     unsigned short trouvee = 0;
@@ -49,6 +60,11 @@ void joueCarte(struct joueur *joueur,struct carte carte, struct carte **plateau,
     }
 }
 
+/**
+ * Fonction initialisant la pioche.
+ * @param pioche
+ * La pioche dans laquelle on souhaite générer les cartes.
+ */
 void initPioche(struct carte *pioche) {
     // init de la pioche
     for (int i = 0; i < 104; i++) {
@@ -57,6 +73,13 @@ void initPioche(struct carte *pioche) {
     }
 }
 
+/**
+ * Fonction tirant 4 cartes aléatoires dans la pioche afin de générer les 4 rangées.
+ * @param pioche
+ * La pioche dans laquelle on souhaite tirer les 4 cartes.
+ * @param plateau
+ * Le plateau dans lequel on souhaite placer les 4 cartes.
+ */
 void initPlateau(struct carte *pioche, struct carte **plateau) {
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 6; j++) {
@@ -74,6 +97,15 @@ void initPlateau(struct carte *pioche, struct carte **plateau) {
     }
 }
 
+/**
+ * Fonction initialisant les cartes des joueurs.
+ * @param pioche
+ * La pioche dans laquelle on souhaite tirer les cartes des joueurs.
+ * @param joueurs
+ * Les joueurs à initialiser.
+ * @param nbJoueurs
+ * Le nombre de joueurs.
+ */
 void initJoueurs(struct carte *pioche, struct joueur *joueurs, int nbJoueurs) {
     //init des joueurs
     for (int i = 0; i < nbJoueurs; i++) {

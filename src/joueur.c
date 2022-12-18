@@ -17,10 +17,15 @@ int main() {
 
     //lancement du socket client
     sd = socket(AF_INET, SOCK_STREAM, 0);
-    if (connect(sd, (struct sockaddr *) &server_addr, sizeof(server_addr)) < 0) {
-        printf("Erreur lors de connexion au serveur\n");
-        return -1;
-    }
+    int connected = 0;
+    do {
+        if (connect(sd, (struct sockaddr *) &server_addr, sizeof(server_addr)) < 0) {
+            printf("Erreur lors de connexion au serveur, tentative de reconnexion dans 5 secondes...\n");
+            sleep(5);
+        } else {
+            connected = 1;
+        }
+    } while (!connected);
     printf("Connecté au serveur !\n");
     printf("En attente du début de la partie ...\n");
 
@@ -43,6 +48,9 @@ int main() {
             send(sd, message, 256 * sizeof(char), 0);
         }
     } while (!quit);
+
+    printf("Press any key to quit\n");
+    scanf(" %c", &user_input);
 
     close(sd);
     return 0;

@@ -1,4 +1,4 @@
 #!/bin/bash
-gcc -o bin/6QuiPrend-server src/gestionJeu.c src/sixQuiPrend.c
-gcc -o bin/robot src/robot.c
+gcc -w -o bin/6QuiPrend-server src/gestionJeu.c src/sixQuiPrend.c
+gcc -w -o bin/robot src/robot.c
 ./bin/6QuiPrend-server

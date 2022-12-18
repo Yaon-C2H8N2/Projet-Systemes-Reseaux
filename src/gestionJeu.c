@@ -17,6 +17,10 @@ int *SIG_CLIENT;
 int SIG_SD;
 int SIG_NBJ;
 
+/**
+ * Fonction éxecutant lors de la capture d'un signal SIGINT ou SIGTERM.
+ * @param sig
+ */
 void sigint_trap(int sig) {
     for (int i = 0; i < SIG_NBJ; i++) {
         char message[256] = "[quit]";
@@ -32,6 +36,11 @@ void sigint_trap(int sig) {
     exit(0);
 }
 
+/**
+ * Fonction initialisant le socket serveur.
+ * @return
+ * Le descripteur du socket initialisé.
+ */
 int init_serveur() {
     int sd;
     struct sockaddr_in server_addr;
@@ -48,7 +57,15 @@ int init_serveur() {
     return sd;
 }
 
-
+/**
+ * Fonction acceptant une connexion au serveur
+ * @param sd
+ * Le descripteur du socket serveur.
+ * @param client
+ * Le tableau dynamique contenant les descripteurs des sockets clients.
+ * @param nbJoueur
+ * Le nombre de joueur déjà connectés.
+ */
 void ajout_joueur(int sd, int *client, int nbJoueur) {
     struct sockaddr_in client_addr;
 
@@ -70,6 +87,13 @@ void ajout_joueur(int sd, int *client, int nbJoueur) {
     }
 }
 
+/**
+ * Fonction envoyant une directive d'affichage au client et envoyant le message à afficher.
+ * @param client
+ * Le descripteur du socket du client auquel est déstiné le message.
+ * @param contenu
+ * Le contenu du message à afficher au client.
+ */
 void showToClient(int client, char *contenu) {
     char message[256];
     memset(message, 0, sizeof(message));
@@ -80,6 +104,13 @@ void showToClient(int client, char *contenu) {
     send(client, message, 256 * sizeof(char), 0);
 }
 
+/**
+ * Fonction envoyant une directive de saisie au client et recevant la réponse du client.
+ * @param client
+ * Le descripteur du socket du client auquel envoyer la directive et dont le serveur attend la réponse.
+ * @param content
+ * La chaîne de caractère dans laquelle stocker la réponse du client.
+ */
 void promptFromClient(int client, char *content) {
     char message[256];
     memset(message, 0, sizeof(message));
@@ -90,6 +121,13 @@ void promptFromClient(int client, char *content) {
     strcpy(content, message);
 }
 
+/**
+ * Boucle du jeu.
+ * @param client
+ * Tableau dynamique contenant les descripteurs des sockets clients.
+ * @param nbJoueur
+ * Nombre de joueurs connectés à la partie.
+ */
 void boucleJeu(int *client, int nbJoueur) {
     int fin = 0;
     struct joueur *joueurs = (struct joueur *) (calloc(nbJoueur, sizeof(struct joueur)));
@@ -202,6 +240,7 @@ void boucleJeu(int *client, int nbJoueur) {
         nbTours++;
     } while (fin == 0 && nbTours < 10);
 
+    //affichage des scores à la fin de la manche
     for (int i = 0; i < nbJoueur; i++) {
         char message[256];
         memset(message, 0, sizeof(message));
@@ -221,6 +260,11 @@ void boucleJeu(int *client, int nbJoueur) {
     free(plateau);
 }
 
+/**
+ * Fonction principale.
+ * @return
+ * Code de fin de programme.
+ */
 int main() {
     srand(time(NULL));
     int sd;
@@ -259,7 +303,6 @@ int main() {
                         SIG_CLIENT = client;
                         if (fork() == 0) {
                             execl("./bin/robot", "");
-                            quit++;
                         } else {
                             ajout_joueur(sd, client, nbJoueur);
                         }
